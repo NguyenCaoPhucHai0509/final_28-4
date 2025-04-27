@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vị Trí Giao Hàng - Hệ Thống Giao Đồ Ăn</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="static/css/style.css">
+    <style>
+        #map {
+            height: 70vh;
+            width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-container {
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Vị trí giao hàng</h2>
+            <button onclick="window.close()" class="btn btn-outline-secondary">
+                <i class="bi bi-x-lg"></i> Đóng
+            </button>
+        </div>
+
+        <!-- Hiển thị thông báo lỗi nếu có -->
+        <div class="alert alert-danger d-none" id="error-message"></div>
+
+        <!-- Loading indicator -->
+        <div id="loading" class="text-center my-5">
+            <div class="spinner-border text-danger" role="status">
+                <span class="visually-hidden">Đang tải...</span>
+            </div>
+            <p class="mt-2">Đang tải thông tin đơn hàng...</p>
+        </div>
+
+        <!-- Delivery Info -->
+        <div id="delivery-info" class="d-none">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">Thông tin đơn hàng <span id="order-id-display"></span></h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Khoảng cách:</strong> <span id="distance-display"></span> km</p>
+                            <p><strong>Phí vận chuyển:</strong> <span id="shipping-fee-display"></span></p>
+                            <p><strong>Địa chỉ giao hàng:</strong> <span id="address-display">Đang tải...</span></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">Hướng dẫn</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <i class="bi bi-pin-map-fill text-danger"></i> Điểm đỏ là vị trí giao hàng
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-shop text-primary"></i> Điểm xanh là vị trí nhà hàng
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-arrows-move"></i> Di chuyển bản đồ bằng chuột
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-zoom-in"></i> Phóng to/thu nhỏ bằng cuộn chuột
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Container -->
+            <div class="map-container mb-4">
+                <div id="map"></div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="text-center mb-4">
+                <a href="https://www.google.com/maps/dir//" id="google-maps-link" target="_blank"
+                    class="btn btn-lg btn-primary">
+                    <i class="bi bi-google"></i> Mở trong Google Maps
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="static/js/auth.js"></script>
+    <script src="static/js/delivery-map.js"></script>
+</body>
+
+</html>

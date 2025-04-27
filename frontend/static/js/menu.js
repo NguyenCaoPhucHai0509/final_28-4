@@ -364,12 +364,29 @@ async function searchAddress() {
         searchBtn.disabled = true;
         searchBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang tìm...';
         
+        // Thêm thông báo trong console để debug
+        console.log('Đang tìm kiếm địa chỉ:', address);
+        
         // Gọi API Nominatim để chuyển đổi địa chỉ thành tọa độ
         // Thêm "Vietnam" vào cuối để tăng độ chính xác nếu người dùng không nhập đầy đủ
-        const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', Vietnam')}&limit=1`;
+        const searchQuery = address.includes('Vietnam') ? address : address + ', Vietnam';
+        const nominatimUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`;
         
-        const response = await fetch(nominatimUrl);
+        console.log('Gọi API:', nominatimUrl);
+        
+        const response = await fetch(nominatimUrl, {
+            headers: {
+                'Accept-Language': 'vi', // Yêu cầu kết quả bằng tiếng Việt
+                'User-Agent': 'FoodDeliveryApp/1.0' // Thêm User-Agent để tránh bị chặn
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Lỗi khi gọi API: ${response.status} ${response.statusText}`);
+        }
+        
         const data = await response.json();
+        console.log('Kết quả tìm kiếm:', data);
         
         // Khôi phục trạng thái nút tìm kiếm
         searchBtn.disabled = false;
@@ -385,15 +402,22 @@ async function searchAddress() {
         const lat = parseFloat(data[0].lat);
         const lon = parseFloat(data[0].lon);
         
+        // Kiểm tra tọa độ hợp lệ
+        if (isNaN(lat) || isNaN(lon)) {
+            throw new Error('Tọa độ không hợp lệ từ API');
+        }
+        
         // Cập nhật vị trí marker và tọa độ
         updateMarkerPosition(lat, lon);
         
         // Hiển thị thông báo thành công
         console.log('Đã tìm thấy địa chỉ:', data[0].display_name);
+        alert(`Đã tìm thấy địa chỉ: ${data[0].display_name}`);
         
     } catch (error) {
-        alert('Có lỗi xảy ra khi tìm kiếm địa chỉ. Vui lòng thử lại sau.');
+        // Hiển thị thông báo lỗi chi tiết hơn
         console.error('Lỗi khi tìm kiếm địa chỉ:', error);
+        alert(`Có lỗi xảy ra khi tìm kiếm địa chỉ: ${error.message}`);
         
         // Khôi phục trạng thái nút tìm kiếm
         const searchBtn = document.getElementById('search-address-btn');
@@ -402,8 +426,10 @@ async function searchAddress() {
     }
 }
 
-// Hàm cập nhật vị trí marker và tọa độ
+
 function updateMarkerPosition(lat, lon) {
+    console.log('Cập nhật vị trí marker:', lat, lon);
+    
     // Xóa marker cũ nếu có
     if (marker) {
         map.removeLayer(marker);
@@ -418,6 +444,8 @@ function updateMarkerPosition(lat, lon) {
     // Cập nhật giá trị tọa độ
     document.getElementById('dropoff-lat').value = lat.toFixed(6);
     document.getElementById('dropoff-lon').value = lon.toFixed(6);
+    
+    console.log('Đã cập nhật tọa độ:', lat.toFixed(6), lon.toFixed(6));
 }
 
 // Hàm đặt hàng
