@@ -1,0 +1,5 @@
+__pycache__/
+*.db
+DIARY.md
+OPTIONAL.md
+imgs/
