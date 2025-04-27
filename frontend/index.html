@@ -1,52 +1,284 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 
 <head>
     <meta charset="UTF-8">
-    <title>Create Restaurant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Giao Đồ Ăn</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <style>
-        #map {
-            height: 400px;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="static/css/style.css">
 </head>
 
-<body class="p-4">
+<body>
+    <!-- Header/Navbar sẽ được hiển thị sau khi đăng nhập -->
+    <div id="navbar-container"></div>
 
-    <div class="container">
-        <h2>Create a Restaurant</h2>
-
-        <form id="restaurant-form">
-            <div class="mb-3">
-                <label for="name" class="form-label">Restaurant Name</label>
-                <input type="text" class="form-control" id="name" required />
+    <!-- Main Content -->
+    <div id="app" class="container mt-4">
+        <!-- Nội dung sẽ được tải động dựa trên trạng thái đăng nhập -->
+        <div class="d-flex justify-content-center align-items-center" style="height: 70vh;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Đang tải...</span>
             </div>
-
-            <div class="mb-3">
-                <label for="latitude" class="form-label">Latitude</label>
-                <input type="text" class="form-control" id="latitude" readonly />
-            </div>
-
-            <div class="mb-3">
-                <label for="longitude" class="form-label">Longitude</label>
-                <input type="text" class="form-control" id="longitude" readonly />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">Select Location on Map</label>
-                <div id="map"></div>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
-
-        <div class="mt-3" id="status"></div>
+        </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="./static/js/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/js/auth.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Kiểm tra người dùng đã đăng nhập chưa
+            const token = localStorage.getItem('access_token');
+            const user = localStorage.getItem('user');
+
+            // Nếu chưa đăng nhập, chuyển hướng đến trang login
+            if (!token || !user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Nếu đã đăng nhập, hiển thị navbar và tải giao diện chính
+            const userObj = JSON.parse(user);
+            loadNavbar(userObj.role);
+            loadMainContent(userObj.role);
+        });
+
+        // Hàm tải thanh điều hướng (navbar) dựa trên vai trò người dùng
+        function loadNavbar(role) {
+            const navbarContainer = document.getElementById('navbar-container');
+
+            let navbarHTML = `
+                <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+                    <div class="container">
+                        <a class="navbar-brand" href="index.html">Hệ Thống Giao Đồ Ăn</a>
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarNav">
+                            <ul class="navbar-nav me-auto">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="index.html">Trang chủ</a>
+                                </li>
+            `;
+
+            // Thêm các mục menu dựa trên vai trò
+            switch (role) {
+                case 'customer':
+                    navbarHTML += `
+                                <li class="nav-item">
+                                    <a class="nav-link" href="restaurants.html">Nhà hàng</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="my-orders.html">Đơn hàng của tôi</a>
+                                </li>
+                    `;
+                    break;
+                case 'owner':
+                    navbarHTML += `
+                                <li class="nav-item">
+                                    <a class="nav-link" href="branches.html">Chi nhánh</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="menu-management.html">Quản lý thực đơn</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="staff.html">Nhân viên</a>
+                                </li>
+                    `;
+                    break;
+                case 'kitchen_staff':
+                    navbarHTML += `
+                                <li class="nav-item">
+                                    <a class="nav-link" href="pending-orders.html">Đơn hàng chờ xử lý</a>
+                                </li>
+                    `;
+                    break;
+                case 'driver':
+                    navbarHTML += `
+                                <li class="nav-item">
+                                    <a class="nav-link" href="available-deliveries.html">Đơn hàng chờ giao</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="my-deliveries.html">Đơn hàng của tôi</a>
+                                </li>
+                    `;
+                    break;
+                case 'admin':
+                    navbarHTML += `
+                                <li class="nav-item">
+                                    <a class="nav-link" href="users.html">Quản lý người dùng</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="admin-restaurants.html">Quản lý nhà hàng</a>
+                                </li>
+                    `;
+                    break;
+            }
+
+            navbarHTML += `
+                            </ul>
+                            <div class="d-flex" id="user-info">
+                                <!-- Sẽ được cập nhật bởi updateUserInfo() -->
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            `;
+
+            navbarContainer.innerHTML = navbarHTML;
+            updateUserInfo();
+        }
+
+        // Hàm tải nội dung chính dựa trên vai trò người dùng
+        function loadMainContent(role) {
+            const appContainer = document.getElementById('app');
+
+            let contentHTML = `
+                <div class="container mt-4">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h2>Chào mừng đến với Hệ thống Giao đồ ăn</h2>
+                                    <p class="lead">Bạn đã đăng nhập với vai trò: <strong>${role}</strong></p>
+            `;
+
+            // Thêm nội dung dựa trên vai trò
+            switch (role) {
+                case 'customer':
+                    contentHTML += `
+                        <p>Bạn có thể:</p>
+                        <ul>
+                            <li>Xem danh sách nhà hàng và thực đơn</li>
+                            <li>Đặt món ăn và thanh toán</li>
+                            <li>Theo dõi trạng thái đơn hàng</li>
+                            <li>Xác nhận đã nhận hàng</li>
+                        </ul>
+                        <div class="mt-4">
+                            <a href="restaurants.html" class="btn btn-primary">Xem nhà hàng</a>
+                            <a href="my-orders.html" class="btn btn-outline-primary ms-2">Đơn hàng của tôi</a>
+                        </div>
+                    `;
+                    break;
+                case 'owner':
+                    contentHTML += `
+                        <p>Bạn có thể:</p>
+                        <ul>
+                            <li>Quản lý các chi nhánh nhà hàng</li>
+                            <li>Cập nhật thực đơn và giá cả</li>
+                            <li>Quản lý nhân viên nhà bếp</li>
+                            <li>Xem báo cáo doanh thu</li>
+                        </ul>
+                        <div class="mt-4">
+                            <a href="branches.html" class="btn btn-primary">Quản lý chi nhánh</a>
+                            <a href="menu-management.html" class="btn btn-outline-primary ms-2">Quản lý thực đơn</a>
+                        </div>
+                    `;
+                    break;
+                case 'kitchen_staff':
+                    contentHTML += `
+                        <p>Bạn có thể:</p>
+                        <ul>
+                            <li>Xem đơn hàng chờ xử lý</li>
+                            <li>Nhận và chuẩn bị món ăn</li>
+                            <li>Cập nhật trạng thái món ăn</li>
+                        </ul>
+                        <div class="mt-4">
+                            <a href="pending-orders.html" class="btn btn-primary">Xem đơn hàng chờ xử lý</a>
+                        </div>
+                    `;
+                    break;
+                case 'driver':
+                    contentHTML += `
+                        <p>Bạn có thể:</p>
+                        <ul>
+                            <li>Xem đơn hàng chờ giao</li>
+                            <li>Nhận đơn hàng để giao</li>
+                            <li>Cập nhật trạng thái giao hàng</li>
+                        </ul>
+                        <div class="mt-4">
+                            <a href="available-deliveries.html" class="btn btn-primary">Xem đơn hàng chờ giao</a>
+                            <a href="my-deliveries.html" class="btn btn-outline-primary ms-2">Đơn hàng của tôi</a>
+                        </div>
+                    `;
+                    break;
+                case 'admin':
+                    contentHTML += `
+                        <p>Bạn có thể:</p>
+                        <ul>
+                            <li>Quản lý tài khoản người dùng</li>
+                            <li>Phê duyệt nhà hàng</li>
+                            <li>Xem báo cáo hệ thống</li>
+                        </ul>
+                        <div class="mt-4">
+                            <a href="users.html" class="btn btn-primary">Quản lý người dùng</a>
+                            <a href="admin-restaurants.html" class="btn btn-outline-primary ms-2">Quản lý nhà hàng</a>
+                        </div>
+                    `;
+                    break;
+            }
+
+            contentHTML += `
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0">Thông tin tài khoản</h5>
+                                </div>
+                                <div class="card-body" id="account-info">
+                                    <!-- Sẽ được cập nhật bởi JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            appContainer.innerHTML = contentHTML;
+
+            // Cập nhật thông tin tài khoản
+            updateAccountInfo();
+        }
+
+        // Hàm cập nhật thông tin tài khoản
+        function updateAccountInfo() {
+            const accountInfoElement = document.getElementById('account-info');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+            accountInfoElement.innerHTML = `
+                <p><strong>Tên đăng nhập:</strong> ${user.username}</p>
+                <p><strong>Email:</strong> ${user.email}</p>
+                <p><strong>Vai trò:</strong> ${translateRole(user.role)}</p>
+                <p><strong>Trạng thái:</strong> ${user.is_active ? '<span class="text-success">Đang hoạt động</span>' : '<span class="text-danger">Bị khóa</span>'}</p>
+                <button class="btn btn-danger w-100" onclick="logout()">
+                    <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                </button>
+            `;
+        }
+
+        // Hàm dịch vai trò sang tiếng Việt
+        function translateRole(role) {
+            switch (role) {
+                case 'customer':
+                    return 'Khách hàng';
+                case 'owner':
+                    return 'Chủ nhà hàng';
+                case 'kitchen_staff':
+                    return 'Nhân viên nhà bếp';
+                case 'driver':
+                    return 'Tài xế';
+                case 'admin':
+                    return 'Quản trị viên';
+                case 'support_staff':
+                    return 'Nhân viên hỗ trợ';
+                default:
+                    return role;
+            }
+        }
+    </script>
 </body>
 
 </html>
